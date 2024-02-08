@@ -9,43 +9,43 @@ module "VPC" {
 
 module "SUBNET" {
   source = "./modules/Subnet"
-  vpc_id = var.vpc_id
+  vpc_id = module.VPC.myvpc_id
   subnet_cidr_block = var.subnet_cidr_block
   availability_zone = var.availability_zone
 
-  depends_on = [ aws_vpc.myvpc ]
+  depends_on = [ module.VPC ]
 }
 
 module "InternetGateway" {
   source = "./modules/InternetGateway"
-  vpc_id = var.vpc_id
+  vpc_id = module.VPC.myvpc_id
 
-  depends_on = [ aws_vpc.myvpc ]
+  depends_on = [ module.VPC ]
 }
 
 module "RouteTable" {
   source = "./modules/RouteTable"
-  vpc_id = var.vpc_id
+  vpc_id = module.VPC.myvpc_id
   rt_cidr_block = var.rt_cidr_block
-  gateway_id = var.gateway_id
+  gateway_id = module.InternetGateway.myigw_id
 
-  depends_on = [ aws_vpc.myvpc , aws_internet_gateway.myigw  ]
+  depends_on = [ module.VPC , module.InternetGateway]
 }
 
 module "RouteTableAssociation" {
   source = "./modules/RouteTableAssociation"
-  subnet_id = var.subnet_id
-  route_table_id = var.route_table_id
+  subnet_id = module.SUBNET.subnet_id
+  route_table_id = module.RouteTable.myrt_id
 
-  depends_on = [ aws_subnet.sub1 , aws_route_table.myrt  ]
+  depends_on = [ module.SUBNET , module.RouteTable  ]
 }
 
 module "SecurityGroup" {
   source = "./modules/SecurityGroups"
-  vpc_id = var.vpc_id
+  vpc_id = module.VPC.myvpc_id
   sg_cidr_blocks = var.sg_cidr_blocks
 
-  depends_on = [ aws_vpc.myvpc  ]
+  depends_on = [ module.VPC  ]
 }
 
 resource "aws_key_pair" "example" {
@@ -58,8 +58,8 @@ module "EC2" {
   ami_value = var.ami_value
   instance_type_value = var.instance_type_value
   key_name = aws_key_pair.example.key_name
-  security_group_id = var.security_group_id
-  subnet_id_value = var.subnet_id
+  security_group_id = module.SecurityGroup.mysg_id
+  subnet_id_value = module.SUBNET.subnet_id
 
-  depends_on = [ aws_key_pair.example ]
+  depends_on = [ aws_key_pair.example, module.SUBNET, module.SecurityGroup ]
 }

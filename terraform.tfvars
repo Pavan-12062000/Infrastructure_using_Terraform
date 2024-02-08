@@ -1,4 +1,4 @@
-vpc_cidr = "10.0.0.0/16"
+vpc_cidr = "10.0.0.0/8"
 availability_zone = "us-east-1a"
 subnet_cidr_block = "10.0.0.0/24"
 rt_cidr_block = "0.0.0.0/0"
